@@ -37,12 +37,12 @@ directories in an encrypted repository stored on different backends.
 		}
 
 		switch {
-		case globalOptions.Quiet:
-			globalOptions.verbosity = 0
-		case globalOptions.Verbose:
-			globalOptions.verbosity = 2
 		case globalOptions.Debug:
 			globalOptions.verbosity = 3
+		case globalOptions.Verbose:
+			globalOptions.verbosity = 2
+		case globalOptions.Quiet:
+			globalOptions.verbosity = 0
 		}
 
 		// parse extended options
