@@ -66,6 +66,7 @@ type BackupOptions struct {
 	FilesFrom        string
 	TimeStamp        string
 	WithAtime        bool
+	MinPackSize      uint
 }
 
 var backupOptions BackupOptions
@@ -88,6 +89,7 @@ func init() {
 	f.StringVar(&backupOptions.FilesFrom, "files-from", "", "read the files to backup from file (can be combined with file args)")
 	f.StringVar(&backupOptions.TimeStamp, "time", "", "time of the backup (ex. '2012-11-01 22:08:41') (default: now)")
 	f.BoolVar(&backupOptions.WithAtime, "with-atime", false, "store the atime for all files and directories")
+	f.UintVar(&backupOptions.MinPackSize, "min-pack-size", 4, "minimal pack size in MiB")
 }
 
 func newScanProgress(gopts GlobalOptions) *restic.Progress {
@@ -410,6 +412,8 @@ func runBackup(opts BackupOptions, gopts GlobalOptions, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	repo.SetMinPackSize(opts.MinPackSize * 1024 * 1024)
 
 	// exclude restic cache
 	if repo.Cache != nil {

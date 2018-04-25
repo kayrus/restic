@@ -29,6 +29,7 @@ type Repository struct {
 	keyName string
 	idx     *MasterIndex
 	restic.Cache
+	minPackSize uint
 
 	treePM *packerManager
 	dataPM *packerManager
@@ -37,10 +38,11 @@ type Repository struct {
 // New returns a new repository with backend be.
 func New(be restic.Backend) *Repository {
 	repo := &Repository{
-		be:     be,
-		idx:    NewMasterIndex(),
-		dataPM: newPackerManager(be, nil),
-		treePM: newPackerManager(be, nil),
+		be:          be,
+		idx:         NewMasterIndex(),
+		dataPM:      newPackerManager(be, nil),
+		treePM:      newPackerManager(be, nil),
+		minPackSize: 1024 * 1024 * 4,
 	}
 
 	return repo
@@ -49,6 +51,11 @@ func New(be restic.Backend) *Repository {
 // Config returns the repository configuration.
 func (r *Repository) Config() restic.Config {
 	return r.cfg
+}
+
+// SetMinPackSize sets the minimal pack size
+func (r *Repository) SetMinPackSize(size uint) {
+	r.minPackSize = size
 }
 
 // UseCache replaces the backend with the wrapped cache.
@@ -247,7 +254,7 @@ func (r *Repository) SaveAndEncrypt(ctx context.Context, t restic.BlobType, data
 	}
 
 	// if the pack is not full enough, put back to the list
-	if packer.Size() < minPackSize {
+	if packer.Size() < r.minPackSize {
 		debug.Log("pack is not full enough (%d bytes)", packer.Size())
 		pm.insertPacker(packer)
 		return *id, nil
